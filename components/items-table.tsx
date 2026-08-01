@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import type { Category, Item } from "@/lib/types";
 import { deleteItem } from "@/lib/actions/items";
+import { PhotoLightbox } from "@/components/photo-lightbox";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -73,14 +74,16 @@ export function ItemsTable({
         enableSorting: false,
         cell: ({ row }) =>
           row.original.photoUrl ? (
-            <Image
-              src={row.original.photoUrl}
-              alt={row.original.name}
-              width={48}
-              height={48}
-              className="h-12 w-12 rounded-md object-cover"
-              unoptimized
-            />
+            <PhotoLightbox photoUrl={row.original.photoUrl} name={row.original.name}>
+              <Image
+                src={row.original.photoUrl}
+                alt={row.original.name}
+                width={48}
+                height={48}
+                className="h-12 w-12 rounded-md object-cover"
+                unoptimized
+              />
+            </PhotoLightbox>
           ) : (
             <div className="h-12 w-12 rounded-md bg-muted" />
           ),
