@@ -4,14 +4,21 @@ import { getStorage } from "firebase-admin/storage";
 import path from "node:path";
 import fs from "node:fs";
 
-function createApp(): App {
-  const keyPath = path.join(process.cwd(), "serviceAccountKey.json");
-  if (!fs.existsSync(keyPath)) {
-    throw new Error(
-      "Missing serviceAccountKey.json in project root. Download it from Firebase console > Project settings > Service accounts.",
-    );
+function loadServiceAccount(): object {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+    return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
   }
-  const serviceAccount = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
+  const keyPath = path.join(process.cwd(), "serviceAccountKey.json");
+  if (fs.existsSync(keyPath)) {
+    return JSON.parse(fs.readFileSync(keyPath, "utf-8"));
+  }
+  throw new Error(
+    "Missing Firebase credentials. Set FIREBASE_SERVICE_ACCOUNT_KEY (JSON string) or add serviceAccountKey.json locally.",
+  );
+}
+
+function createApp(): App {
+  const serviceAccount = loadServiceAccount();
   return initializeApp({
     credential: cert(serviceAccount),
     storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
