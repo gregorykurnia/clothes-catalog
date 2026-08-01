@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/table";
 import type { Category, Item } from "@/lib/types";
 import { deleteItem } from "@/lib/actions/items";
+import { cloudinaryThumb } from "@/lib/cloudinary";
 import { PhotoLightbox } from "@/components/photo-lightbox";
 import { toast } from "sonner";
 import {
@@ -78,7 +79,7 @@ export function ItemsTable({
           row.original.photoUrl ? (
             <PhotoLightbox photoUrl={row.original.photoUrl} name={row.original.name}>
               <Image
-                src={row.original.photoUrl}
+                src={cloudinaryThumb(row.original.photoUrl, 96)}
                 alt={row.original.name}
                 width={48}
                 height={48}

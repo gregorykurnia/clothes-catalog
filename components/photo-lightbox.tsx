@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { cloudinaryPreview } from "@/lib/cloudinary";
 
 async function shareItemPhoto(photoUrl: string, name: string) {
   try {
@@ -59,7 +60,7 @@ export function PhotoLightbox({
         <DialogTitle>{name}</DialogTitle>
         <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted">
           <Image
-            src={photoUrl}
+            src={cloudinaryPreview(photoUrl, 1000)}
             alt={name}
             fill
             className="object-contain"
