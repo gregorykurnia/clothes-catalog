@@ -28,8 +28,12 @@ async function uploadPhoto(file: File): Promise<string> {
   const filename = `items/${randomUUID()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
   const blob = bucket.file(filename);
-  await blob.save(buffer, { contentType: file.type, public: true });
-  return `https://storage.googleapis.com/${bucket.name}/${filename}`;
+  const token = randomUUID();
+  await blob.save(buffer, {
+    contentType: file.type,
+    metadata: { metadata: { firebaseStorageDownloadTokens: token } },
+  });
+  return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${token}`;
 }
 
 export async function createItem(formData: FormData): Promise<void> {
