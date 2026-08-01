@@ -42,6 +42,20 @@ import {
 
 type Row = Item & { categoryName: string };
 
+let pendingRefreshTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// Coalesces rapid-fire edits (e.g. flipping several dropdowns in a row) into a
+// single router.refresh(). Firing one refresh per edit lets their responses
+// race and arrive out of order, so a stale snapshot from an earlier edit can
+// land last and revert everything to it.
+function scheduleRefresh(router: { refresh: () => void }) {
+  if (pendingRefreshTimeout) clearTimeout(pendingRefreshTimeout);
+  pendingRefreshTimeout = setTimeout(() => {
+    pendingRefreshTimeout = null;
+    router.refresh();
+  }, 400);
+}
+
 export function ItemsTable({
   items,
   categories,
@@ -251,7 +265,7 @@ const StatusCell = memo(function StatusCell({ item }: { item: Item }) {
     setBusy(true);
     try {
       await updateItemStatus(item.id, next);
-      router.refresh();
+      scheduleRefresh(router);
     } catch {
       setStatus(previous);
       toast.error("Failed to update status");
@@ -296,7 +310,7 @@ const GoingOutCell = memo(function GoingOutCell({ item }: { item: Item }) {
     setBusy(true);
     try {
       await updateItemGoingOut(item.id, next);
-      router.refresh();
+      scheduleRefresh(router);
     } catch {
       setGoingOut(previous);
       toast.error("Failed to update going out status");
