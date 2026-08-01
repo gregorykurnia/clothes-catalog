@@ -133,14 +133,14 @@ export function CatalogApp({
               <SelectTrigger>
                 <SelectValue placeholder="Status">
                   {(value: string | null) =>
-                    value === "present" ? "Present" : value === "washed" ? "Washed" : "All statuses"
+                    value === "present" ? "Present" : value === "washed" ? "Laundry" : "All statuses"
                   }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={ALL}>All statuses</SelectItem>
                 <SelectItem value="present">Present</SelectItem>
-                <SelectItem value="washed">Washed</SelectItem>
+                <SelectItem value="washed">Laundry</SelectItem>
               </SelectContent>
             </Select>
 

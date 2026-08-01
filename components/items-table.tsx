@@ -16,13 +16,6 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -257,24 +250,19 @@ function StatusCell({ item }: { item: Item }) {
   }
 
   return (
-    <Select value={item.status} onValueChange={handleChange} disabled={busy}>
-      <SelectTrigger
-        size="sm"
-        className={`h-7 border-none text-xs font-medium ${
-          item.status === "washed"
-            ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-            : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
-        }`}
-      >
-        <SelectValue placeholder="Status">
-          {(value: ItemStatus | null) => (value === "washed" ? "Washed" : "Present")}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="present">Present</SelectItem>
-        <SelectItem value="washed">Washed</SelectItem>
-      </SelectContent>
-    </Select>
+    <select
+      value={item.status}
+      disabled={busy}
+      onChange={(e) => handleChange(e.target.value)}
+      className={`h-7 rounded-md border-none px-2 text-xs font-medium ${
+        item.status === "washed"
+          ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+          : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
+      }`}
+    >
+      <option value="present">Present</option>
+      <option value="washed">Laundry</option>
+    </select>
   );
 }
 
@@ -298,24 +286,19 @@ function GoingOutCell({ item }: { item: Item }) {
   }
 
   return (
-    <Select value={item.goingOut ? "yes" : "no"} onValueChange={handleChange} disabled={busy}>
-      <SelectTrigger
-        size="sm"
-        className={`h-7 border-none text-xs font-medium ${
-          item.goingOut
-            ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-            : "bg-muted text-muted-foreground"
-        }`}
-      >
-        <SelectValue placeholder="Going Out?">
-          {(value: string | null) => (value === "yes" ? "Yes" : "No")}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="yes">Yes</SelectItem>
-        <SelectItem value="no">No</SelectItem>
-      </SelectContent>
-    </Select>
+    <select
+      value={item.goingOut ? "yes" : "no"}
+      disabled={busy}
+      onChange={(e) => handleChange(e.target.value)}
+      className={`h-7 rounded-md border-none px-2 text-xs font-medium ${
+        item.goingOut
+          ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+          : "bg-muted text-muted-foreground"
+      }`}
+    >
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+    </select>
   );
 }
 

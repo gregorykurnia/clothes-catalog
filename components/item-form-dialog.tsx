@@ -190,13 +190,13 @@ export function ItemFormDialog({
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Select a status">
                     {(value: ItemStatus | null) =>
-                      value === "washed" ? "Washed" : "Present"
+                      value === "washed" ? "Laundry" : "Present"
                     }
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="present">Present</SelectItem>
-                  <SelectItem value="washed">Washed</SelectItem>
+                  <SelectItem value="washed">Laundry</SelectItem>
                 </SelectContent>
               </Select>
             </div>
