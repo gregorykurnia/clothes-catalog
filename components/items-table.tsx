@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   type ColumnDef,
   type SortingState,
@@ -51,6 +52,7 @@ export function ItemsTable({
 }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const router = useRouter();
 
   const categoryMap = useMemo(
     () => new Map(categories.map((c) => [c.id, c.name])),
@@ -137,6 +139,7 @@ export function ItemsTable({
                       try {
                         await deleteItem(row.original.id);
                         toast.success("Item deleted");
+                        router.refresh();
                       } catch {
                         toast.error("Failed to delete item");
                       }
@@ -151,7 +154,7 @@ export function ItemsTable({
         ),
       },
     ],
-    [onEdit],
+    [onEdit, router],
   );
 
   const table = useReactTable({

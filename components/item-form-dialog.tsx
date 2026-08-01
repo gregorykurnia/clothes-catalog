@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ export function ItemFormDialog({
   const [submitting, setSubmitting] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (open) {
@@ -73,6 +75,7 @@ export function ItemFormDialog({
         toast.success("Item added");
       }
       onOpenChange(false);
+      router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
