@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   type ColumnDef,
@@ -248,15 +248,14 @@ export function ItemsTable({
 
 const StatusCell = memo(function StatusCell({ item }: { item: Item }) {
   const [status, setStatus] = useState(item.status);
-  const [busy, setBusy] = useState(false);
   const router = useRouter();
   // Tracks the updatedAt of the value we're currently showing, so an
   // out-of-order refresh response carrying an older snapshot (from before
   // this or another edit landed) can't stomp a newer value.
-  const versionRef = useRef(item.updatedAt);
+  const [version, setVersion] = useState(item.updatedAt);
 
-  if (item.updatedAt > versionRef.current) {
-    versionRef.current = item.updatedAt;
+  if (item.updatedAt > version) {
+    setVersion(item.updatedAt);
     if (item.status !== status) setStatus(item.status);
   }
 
@@ -265,23 +264,21 @@ const StatusCell = memo(function StatusCell({ item }: { item: Item }) {
     if (next === status) return;
     const previous = status;
     setStatus(next);
-    setBusy(true);
     try {
       const updatedAt = await updateItemStatus(item.id, next);
-      versionRef.current = updatedAt;
+      // Two edits on the same row can resolve out of order; never let the
+      // version go backward.
+      setVersion((v) => Math.max(v, updatedAt));
       scheduleRefresh(router);
     } catch {
       setStatus(previous);
       toast.error("Failed to update status");
-    } finally {
-      setBusy(false);
     }
   }
 
   return (
     <select
       value={status}
-      disabled={busy}
       onChange={(e) => handleChange(e.target.value)}
       className={`h-7 rounded-md border-none px-2 text-xs font-medium ${
         status === "washed"
@@ -297,15 +294,14 @@ const StatusCell = memo(function StatusCell({ item }: { item: Item }) {
 
 const GoingOutCell = memo(function GoingOutCell({ item }: { item: Item }) {
   const [goingOut, setGoingOut] = useState(item.goingOut);
-  const [busy, setBusy] = useState(false);
   const router = useRouter();
   // Tracks the updatedAt of the value we're currently showing, so an
   // out-of-order refresh response carrying an older snapshot (from before
   // this or another edit landed) can't stomp a newer value.
-  const versionRef = useRef(item.updatedAt);
+  const [version, setVersion] = useState(item.updatedAt);
 
-  if (item.updatedAt > versionRef.current) {
-    versionRef.current = item.updatedAt;
+  if (item.updatedAt > version) {
+    setVersion(item.updatedAt);
     if (item.goingOut !== goingOut) setGoingOut(item.goingOut);
   }
 
@@ -314,23 +310,21 @@ const GoingOutCell = memo(function GoingOutCell({ item }: { item: Item }) {
     if (next === goingOut) return;
     const previous = goingOut;
     setGoingOut(next);
-    setBusy(true);
     try {
       const updatedAt = await updateItemGoingOut(item.id, next);
-      versionRef.current = updatedAt;
+      // Two edits on the same row can resolve out of order; never let the
+      // version go backward.
+      setVersion((v) => Math.max(v, updatedAt));
       scheduleRefresh(router);
     } catch {
       setGoingOut(previous);
       toast.error("Failed to update going out status");
-    } finally {
-      setBusy(false);
     }
   }
 
   return (
     <select
       value={goingOut ? "yes" : "no"}
-      disabled={busy}
       onChange={(e) => handleChange(e.target.value)}
       className={`h-7 rounded-md border-none px-2 text-xs font-medium ${
         goingOut
