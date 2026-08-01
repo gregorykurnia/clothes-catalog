@@ -147,7 +147,11 @@ export function ItemFormDialog({
                 required
               >
                 <SelectTrigger id="category">
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder="Select a category">
+                    {(value: string | null) =>
+                      categories.find((c) => c.id === value)?.name ?? "Select a category"
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((c) => (
