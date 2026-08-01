@@ -16,6 +16,13 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -23,8 +30,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Category, Item } from "@/lib/types";
-import { deleteItem } from "@/lib/actions/items";
+import type { Category, Item, ItemStatus } from "@/lib/types";
+import { deleteItem, updateItemGoingOut, updateItemStatus } from "@/lib/actions/items";
 import { cloudinaryThumb } from "@/lib/cloudinary";
 import { PhotoLightbox } from "@/components/photo-lightbox";
 import { toast } from "sonner";
@@ -114,34 +121,14 @@ export function ItemsTable({
         header: ({ column }) => (
           <SortButton column={column} label="Status" />
         ),
-        cell: ({ row }) => (
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs ${
-              row.original.status === "washed"
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-                : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
-            }`}
-          >
-            {row.original.status === "washed" ? "Washed" : "Present"}
-          </span>
-        ),
+        cell: ({ row }) => <StatusCell item={row.original} />,
       },
       {
         accessorKey: "goingOut",
         header: ({ column }) => (
           <SortButton column={column} label="Going Out?" />
         ),
-        cell: ({ row }) => (
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs ${
-              row.original.goingOut
-                ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                : "bg-muted text-muted-foreground"
-            }`}
-          >
-            {row.original.goingOut ? "Yes" : "No"}
-          </span>
-        ),
+        cell: ({ row }) => <GoingOutCell item={row.original} />,
       },
       {
         id: "actions",
@@ -248,6 +235,87 @@ export function ItemsTable({
         </Table>
       </div>
     </div>
+  );
+}
+
+function StatusCell({ item }: { item: Item }) {
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+
+  async function handleChange(value: string | null) {
+    const status = value as ItemStatus;
+    if (!status || status === item.status) return;
+    setBusy(true);
+    try {
+      await updateItemStatus(item.id, status);
+      router.refresh();
+    } catch {
+      toast.error("Failed to update status");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Select value={item.status} onValueChange={handleChange} disabled={busy}>
+      <SelectTrigger
+        size="sm"
+        className={`h-7 border-none text-xs font-medium ${
+          item.status === "washed"
+            ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+            : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
+        }`}
+      >
+        <SelectValue placeholder="Status">
+          {(value: ItemStatus | null) => (value === "washed" ? "Washed" : "Present")}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="present">Present</SelectItem>
+        <SelectItem value="washed">Washed</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+
+function GoingOutCell({ item }: { item: Item }) {
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+
+  async function handleChange(value: string | null) {
+    if (!value) return;
+    const goingOut = value === "yes";
+    if (goingOut === item.goingOut) return;
+    setBusy(true);
+    try {
+      await updateItemGoingOut(item.id, goingOut);
+      router.refresh();
+    } catch {
+      toast.error("Failed to update going out status");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Select value={item.goingOut ? "yes" : "no"} onValueChange={handleChange} disabled={busy}>
+      <SelectTrigger
+        size="sm"
+        className={`h-7 border-none text-xs font-medium ${
+          item.goingOut
+            ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+            : "bg-muted text-muted-foreground"
+        }`}
+      >
+        <SelectValue placeholder="Going Out?">
+          {(value: string | null) => (value === "yes" ? "Yes" : "No")}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="yes">Yes</SelectItem>
+        <SelectItem value="no">No</SelectItem>
+      </SelectContent>
+    </Select>
   );
 }
 

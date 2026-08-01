@@ -64,6 +64,16 @@ export async function updateItem(id: string, formData: FormData): Promise<void> 
   revalidatePath("/", "layout");
 }
 
+export async function updateItemStatus(id: string, status: ItemStatus): Promise<void> {
+  await getDb().collection(COLLECTION).doc(id).update({ status });
+  revalidatePath("/", "layout");
+}
+
+export async function updateItemGoingOut(id: string, goingOut: boolean): Promise<void> {
+  await getDb().collection(COLLECTION).doc(id).update({ goingOut });
+  revalidatePath("/", "layout");
+}
+
 export async function deleteItem(id: string): Promise<void> {
   await getDb().collection(COLLECTION).doc(id).delete();
   revalidatePath("/", "layout");
