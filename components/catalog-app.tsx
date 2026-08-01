@@ -2,11 +2,22 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Shirt, Plus, Tags } from "lucide-react";
 import { ItemsTable } from "@/components/items-table";
 import { ItemFormDialog } from "@/components/item-form-dialog";
 import { CategoryManager } from "@/components/category-manager";
-import type { Category, Item } from "@/lib/types";
+import type { Category, Item, ItemStatus } from "@/lib/types";
+
+const ALL = "all";
+type GoingOutFilter = typeof ALL | "yes" | "no";
+type StatusFilter = typeof ALL | ItemStatus;
 
 export function CatalogApp({
   items,
@@ -17,7 +28,9 @@ export function CatalogApp({
 }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<typeof ALL | string>(ALL);
+  const [activeStatus, setActiveStatus] = useState<StatusFilter>(ALL);
+  const [activeGoingOut, setActiveGoingOut] = useState<GoingOutFilter>(ALL);
 
   const byCategory = useMemo(() => {
     const map = new Map<string, number>();
@@ -36,8 +49,14 @@ export function CatalogApp({
   );
 
   const filteredItems = useMemo(
-    () => (activeCategory ? items.filter((i) => i.categoryId === activeCategory) : items),
-    [items, activeCategory],
+    () =>
+      items.filter(
+        (i) =>
+          (activeCategory === ALL || i.categoryId === activeCategory) &&
+          (activeStatus === ALL || i.status === activeStatus) &&
+          (activeGoingOut === ALL || (i.goingOut ? "yes" : "no") === activeGoingOut),
+      ),
+    [items, activeCategory, activeStatus, activeGoingOut],
   );
 
   return (
@@ -84,31 +103,64 @@ export function CatalogApp({
 
         {categories.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveCategory(null)}
-              className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                activeCategory === null
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-background text-foreground hover:bg-muted"
-              }`}
+            <Select
+              value={activeCategory}
+              onValueChange={(value) => setActiveCategory(value ?? ALL)}
             >
-              All <span className="opacity-70">({items.length})</span>
-            </button>
-            {categories.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setActiveCategory(c.id)}
-                className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-                  activeCategory === c.id
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background text-foreground hover:bg-muted"
-                }`}
-              >
-                {c.name} <span className="opacity-70">({byCategory.get(c.id) ?? 0})</span>
-              </button>
-            ))}
+              <SelectTrigger>
+                <SelectValue placeholder="Category">
+                  {(value: string | null) =>
+                    value && value !== ALL
+                      ? `${categories.find((c) => c.id === value)?.name ?? "Category"} (${byCategory.get(value) ?? 0})`
+                      : `All categories (${items.length})`
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>All categories ({items.length})</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name} ({byCategory.get(c.id) ?? 0})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={activeStatus}
+              onValueChange={(value) => setActiveStatus((value as StatusFilter) ?? ALL)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Status">
+                  {(value: string | null) =>
+                    value === "present" ? "Present" : value === "washed" ? "Washed" : "All statuses"
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>All statuses</SelectItem>
+                <SelectItem value="present">Present</SelectItem>
+                <SelectItem value="washed">Washed</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={activeGoingOut}
+              onValueChange={(value) => setActiveGoingOut((value as GoingOutFilter) ?? ALL)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Going Out?">
+                  {(value: string | null) =>
+                    value === "yes" ? "Going out: Yes" : value === "no" ? "Going out: No" : "Going out: All"
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Going out: All</SelectItem>
+                <SelectItem value="yes">Going out: Yes</SelectItem>
+                <SelectItem value="no">Going out: No</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         )}
 

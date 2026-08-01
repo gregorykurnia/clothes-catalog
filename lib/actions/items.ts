@@ -1,10 +1,14 @@
 "use server";
 
 import { getDb } from "@/lib/firebase-admin";
-import type { Item } from "@/lib/types";
+import type { Item, ItemStatus } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 const COLLECTION = "items";
+
+function parseStatus(value: unknown): ItemStatus {
+  return value === "washed" ? "washed" : "present";
+}
 
 export async function listItems(): Promise<Item[]> {
   const snap = await getDb().collection(COLLECTION).orderBy("createdAt", "desc").get();
@@ -16,6 +20,8 @@ export async function listItems(): Promise<Item[]> {
       photoUrl: (data.photoUrl as string) ?? null,
       categoryId: data.categoryId as string,
       brand: (data.brand as string) ?? "",
+      status: parseStatus(data.status),
+      goingOut: (data.goingOut as boolean) ?? false,
       createdAt: data.createdAt as number,
     };
   });
@@ -26,13 +32,15 @@ export async function createItem(formData: FormData): Promise<void> {
   const categoryId = formData.get("categoryId") as string;
   const brand = ((formData.get("brand") as string) ?? "").trim();
   const photoUrl = ((formData.get("photoUrl") as string) ?? "").trim() || null;
+  const status = parseStatus(formData.get("status"));
+  const goingOut = formData.get("goingOut") === "yes";
 
   if (!name) throw new Error("Name is required");
   if (!categoryId) throw new Error("Category is required");
 
   await getDb()
     .collection(COLLECTION)
-    .add({ name, categoryId, brand, photoUrl, createdAt: Date.now() });
+    .add({ name, categoryId, brand, photoUrl, status, goingOut, createdAt: Date.now() });
   revalidatePath("/", "layout");
 }
 
@@ -41,11 +49,13 @@ export async function updateItem(id: string, formData: FormData): Promise<void> 
   const categoryId = formData.get("categoryId") as string;
   const brand = ((formData.get("brand") as string) ?? "").trim();
   const photoUrl = (formData.get("photoUrl") as string)?.trim();
+  const status = parseStatus(formData.get("status"));
+  const goingOut = formData.get("goingOut") === "yes";
 
   if (!name) throw new Error("Name is required");
   if (!categoryId) throw new Error("Category is required");
 
-  const update: Record<string, unknown> = { name, categoryId, brand };
+  const update: Record<string, unknown> = { name, categoryId, brand, status, goingOut };
   if (photoUrl) {
     update.photoUrl = photoUrl;
   }

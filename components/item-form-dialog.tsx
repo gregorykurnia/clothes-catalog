@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Category, Item } from "@/lib/types";
+import type { Category, Item, ItemStatus } from "@/lib/types";
 import { createItem, updateItem } from "@/lib/actions/items";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { toast } from "sonner";
@@ -39,6 +39,8 @@ export function ItemFormDialog({
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [status, setStatus] = useState<ItemStatus>("present");
+  const [goingOut, setGoingOut] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -50,6 +52,8 @@ export function ItemFormDialog({
       setName(item?.name ?? "");
       setBrand(item?.brand ?? "");
       setCategoryId(item?.categoryId ?? categories[0]?.id ?? "");
+      setStatus(item?.status ?? "present");
+      setGoingOut(item?.goingOut ?? false);
       setPhoto(null);
     }
   }, [open, item, categories]);
@@ -62,6 +66,8 @@ export function ItemFormDialog({
       formData.set("name", name);
       formData.set("brand", brand);
       formData.set("categoryId", categoryId);
+      formData.set("status", status);
+      formData.set("goingOut", goingOut ? "yes" : "no");
       if (photo) {
         const photoUrl = await uploadToCloudinary(photo);
         formData.set("photoUrl", photoUrl);
@@ -177,6 +183,39 @@ export function ItemFormDialog({
                 onChange={(e) => setBrand(e.target.value)}
                 placeholder="e.g. Uniqlo"
               />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="status">Status</Label>
+              <Select value={status} onValueChange={(value) => setStatus(value as ItemStatus)}>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select a status">
+                    {(value: ItemStatus | null) =>
+                      value === "washed" ? "Washed" : "Present"
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="present">Present</SelectItem>
+                  <SelectItem value="washed">Washed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="goingOut">Going Out?</Label>
+              <Select
+                value={goingOut ? "yes" : "no"}
+                onValueChange={(value) => setGoingOut(value === "yes")}
+              >
+                <SelectTrigger id="goingOut">
+                  <SelectValue placeholder="Select an option">
+                    {(value: string | null) => (value === "yes" ? "Yes" : "No")}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Yes</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

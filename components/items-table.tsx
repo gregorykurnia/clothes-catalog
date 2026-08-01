@@ -110,6 +110,40 @@ export function ItemsTable({
         ),
       },
       {
+        accessorKey: "status",
+        header: ({ column }) => (
+          <SortButton column={column} label="Status" />
+        ),
+        cell: ({ row }) => (
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs ${
+              row.original.status === "washed"
+                ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
+            }`}
+          >
+            {row.original.status === "washed" ? "Washed" : "Present"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "goingOut",
+        header: ({ column }) => (
+          <SortButton column={column} label="Going Out?" />
+        ),
+        cell: ({ row }) => (
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs ${
+              row.original.goingOut
+                ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {row.original.goingOut ? "Yes" : "No"}
+          </span>
+        ),
+      },
+      {
         id: "actions",
         header: "",
         enableSorting: false,
