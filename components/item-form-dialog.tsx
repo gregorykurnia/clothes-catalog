@@ -101,6 +101,7 @@ export function ItemFormDialog({
                 id="photo"
                 type="file"
                 accept="image/*"
+                capture="environment"
                 onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
               />
               {item?.photoUrl && !photo && (
