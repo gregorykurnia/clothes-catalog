@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   type ColumnDef,
@@ -232,7 +232,7 @@ export function ItemsTable({
   );
 }
 
-function StatusCell({ item }: { item: Item }) {
+const StatusCell = memo(function StatusCell({ item }: { item: Item }) {
   const [status, setStatus] = useState(item.status);
   const [syncedStatus, setSyncedStatus] = useState(item.status);
   const [busy, setBusy] = useState(false);
@@ -275,9 +275,9 @@ function StatusCell({ item }: { item: Item }) {
       <option value="washed">Laundry</option>
     </select>
   );
-}
+});
 
-function GoingOutCell({ item }: { item: Item }) {
+const GoingOutCell = memo(function GoingOutCell({ item }: { item: Item }) {
   const [goingOut, setGoingOut] = useState(item.goingOut);
   const [syncedGoingOut, setSyncedGoingOut] = useState(item.goingOut);
   const [busy, setBusy] = useState(false);
@@ -320,7 +320,7 @@ function GoingOutCell({ item }: { item: Item }) {
       <option value="no">No</option>
     </select>
   );
-}
+});
 
 function SortButton({
   column,
