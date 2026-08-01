@@ -17,19 +17,28 @@ export function CatalogApp({
 }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const stats = useMemo(() => {
-    const byCategory = new Map<string, number>();
+  const byCategory = useMemo(() => {
+    const map = new Map<string, number>();
     for (const item of items) {
-      byCategory.set(item.categoryId, (byCategory.get(item.categoryId) ?? 0) + 1);
+      map.set(item.categoryId, (map.get(item.categoryId) ?? 0) + 1);
     }
-    return {
+    return map;
+  }, [items]);
+
+  const stats = useMemo(
+    () => ({
       total: items.length,
       categoryCount: categories.length,
-      topCategory:
-        [...byCategory.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
-    };
-  }, [items, categories]);
+    }),
+    [items, categories],
+  );
+
+  const filteredItems = useMemo(
+    () => (activeCategory ? items.filter((i) => i.categoryId === activeCategory) : items),
+    [items, activeCategory],
+  );
 
   return (
     <div className="min-h-screen w-full bg-muted/30">
@@ -73,9 +82,39 @@ export function CatalogApp({
           </div>
         )}
 
+        {categories.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveCategory(null)}
+              className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                activeCategory === null
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-foreground hover:bg-muted"
+              }`}
+            >
+              All <span className="opacity-70">({items.length})</span>
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setActiveCategory(c.id)}
+                className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                  activeCategory === c.id
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background text-foreground hover:bg-muted"
+                }`}
+              >
+                {c.name} <span className="opacity-70">({byCategory.get(c.id) ?? 0})</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="rounded-xl border bg-background p-4 shadow-sm sm:p-6">
           <ItemsTable
-            items={items}
+            items={filteredItems}
             categories={categories}
             onEdit={(item) => {
               setEditingItem(item);
