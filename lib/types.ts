@@ -15,4 +15,5 @@ export type Item = {
   status: ItemStatus;
   goingOut: boolean;
   createdAt: number;
+  updatedAt: number;
 };

@@ -23,6 +23,7 @@ export async function listItems(): Promise<Item[]> {
       status: parseStatus(data.status),
       goingOut: (data.goingOut as boolean) ?? false,
       createdAt: data.createdAt as number,
+      updatedAt: (data.updatedAt as number) ?? (data.createdAt as number),
     };
   });
 }
@@ -38,9 +39,10 @@ export async function createItem(formData: FormData): Promise<void> {
   if (!name) throw new Error("Name is required");
   if (!categoryId) throw new Error("Category is required");
 
+  const now = Date.now();
   await getDb()
     .collection(COLLECTION)
-    .add({ name, categoryId, brand, photoUrl, status, goingOut, createdAt: Date.now() });
+    .add({ name, categoryId, brand, photoUrl, status, goingOut, createdAt: now, updatedAt: now });
   revalidatePath("/", "layout");
 }
 
@@ -55,7 +57,7 @@ export async function updateItem(id: string, formData: FormData): Promise<void> 
   if (!name) throw new Error("Name is required");
   if (!categoryId) throw new Error("Category is required");
 
-  const update: Record<string, unknown> = { name, categoryId, brand, status, goingOut };
+  const update: Record<string, unknown> = { name, categoryId, brand, status, goingOut, updatedAt: Date.now() };
   if (photoUrl) {
     update.photoUrl = photoUrl;
   }
@@ -64,14 +66,18 @@ export async function updateItem(id: string, formData: FormData): Promise<void> 
   revalidatePath("/", "layout");
 }
 
-export async function updateItemStatus(id: string, status: ItemStatus): Promise<void> {
-  await getDb().collection(COLLECTION).doc(id).update({ status });
+export async function updateItemStatus(id: string, status: ItemStatus): Promise<number> {
+  const updatedAt = Date.now();
+  await getDb().collection(COLLECTION).doc(id).update({ status, updatedAt });
   revalidatePath("/", "layout");
+  return updatedAt;
 }
 
-export async function updateItemGoingOut(id: string, goingOut: boolean): Promise<void> {
-  await getDb().collection(COLLECTION).doc(id).update({ goingOut });
+export async function updateItemGoingOut(id: string, goingOut: boolean): Promise<number> {
+  const updatedAt = Date.now();
+  await getDb().collection(COLLECTION).doc(id).update({ goingOut, updatedAt });
   revalidatePath("/", "layout");
+  return updatedAt;
 }
 
 export async function deleteItem(id: string): Promise<void> {

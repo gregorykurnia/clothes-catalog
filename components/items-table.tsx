@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   type ColumnDef,
@@ -248,13 +248,16 @@ export function ItemsTable({
 
 const StatusCell = memo(function StatusCell({ item }: { item: Item }) {
   const [status, setStatus] = useState(item.status);
-  const [syncedStatus, setSyncedStatus] = useState(item.status);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
+  // Tracks the updatedAt of the value we're currently showing, so an
+  // out-of-order refresh response carrying an older snapshot (from before
+  // this or another edit landed) can't stomp a newer value.
+  const versionRef = useRef(item.updatedAt);
 
-  if (item.status !== syncedStatus) {
-    setSyncedStatus(item.status);
-    setStatus(item.status);
+  if (item.updatedAt > versionRef.current) {
+    versionRef.current = item.updatedAt;
+    if (item.status !== status) setStatus(item.status);
   }
 
   async function handleChange(value: string) {
@@ -264,7 +267,8 @@ const StatusCell = memo(function StatusCell({ item }: { item: Item }) {
     setStatus(next);
     setBusy(true);
     try {
-      await updateItemStatus(item.id, next);
+      const updatedAt = await updateItemStatus(item.id, next);
+      versionRef.current = updatedAt;
       scheduleRefresh(router);
     } catch {
       setStatus(previous);
@@ -293,13 +297,16 @@ const StatusCell = memo(function StatusCell({ item }: { item: Item }) {
 
 const GoingOutCell = memo(function GoingOutCell({ item }: { item: Item }) {
   const [goingOut, setGoingOut] = useState(item.goingOut);
-  const [syncedGoingOut, setSyncedGoingOut] = useState(item.goingOut);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
+  // Tracks the updatedAt of the value we're currently showing, so an
+  // out-of-order refresh response carrying an older snapshot (from before
+  // this or another edit landed) can't stomp a newer value.
+  const versionRef = useRef(item.updatedAt);
 
-  if (item.goingOut !== syncedGoingOut) {
-    setSyncedGoingOut(item.goingOut);
-    setGoingOut(item.goingOut);
+  if (item.updatedAt > versionRef.current) {
+    versionRef.current = item.updatedAt;
+    if (item.goingOut !== goingOut) setGoingOut(item.goingOut);
   }
 
   async function handleChange(value: string) {
@@ -309,7 +316,8 @@ const GoingOutCell = memo(function GoingOutCell({ item }: { item: Item }) {
     setGoingOut(next);
     setBusy(true);
     try {
-      await updateItemGoingOut(item.id, next);
+      const updatedAt = await updateItemGoingOut(item.id, next);
+      versionRef.current = updatedAt;
       scheduleRefresh(router);
     } catch {
       setGoingOut(previous);
