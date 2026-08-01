@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import type { Category, Item } from "@/lib/types";
 import { createItem, updateItem } from "@/lib/actions/items";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import { toast } from "sonner";
 
 export function ItemFormDialog({
@@ -59,7 +60,10 @@ export function ItemFormDialog({
       formData.set("name", name);
       formData.set("brand", brand);
       formData.set("categoryId", categoryId);
-      if (photo) formData.set("photo", photo);
+      if (photo) {
+        const photoUrl = await uploadToCloudinary(photo);
+        formData.set("photoUrl", photoUrl);
+      }
 
       if (item) {
         await updateItem(item.id, formData);

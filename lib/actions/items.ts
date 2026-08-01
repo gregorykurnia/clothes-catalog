@@ -1,9 +1,8 @@
 "use server";
 
-import { getBucket, getDb } from "@/lib/firebase-admin";
+import { getDb } from "@/lib/firebase-admin";
 import type { Item } from "@/lib/types";
 import { revalidatePath } from "next/cache";
-import { randomUUID } from "node:crypto";
 
 const COLLECTION = "items";
 
@@ -22,33 +21,14 @@ export async function listItems(): Promise<Item[]> {
   });
 }
 
-async function uploadPhoto(file: File): Promise<string> {
-  const bucket = getBucket();
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const filename = `items/${randomUUID()}.${ext}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const blob = bucket.file(filename);
-  const token = randomUUID();
-  await blob.save(buffer, {
-    contentType: file.type,
-    metadata: { metadata: { firebaseStorageDownloadTokens: token } },
-  });
-  return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(filename)}?alt=media&token=${token}`;
-}
-
 export async function createItem(formData: FormData): Promise<void> {
   const name = (formData.get("name") as string)?.trim();
   const categoryId = formData.get("categoryId") as string;
   const brand = ((formData.get("brand") as string) ?? "").trim();
-  const photo = formData.get("photo") as File | null;
+  const photoUrl = ((formData.get("photoUrl") as string) ?? "").trim() || null;
 
   if (!name) throw new Error("Name is required");
   if (!categoryId) throw new Error("Category is required");
-
-  let photoUrl: string | null = null;
-  if (photo && photo.size > 0) {
-    photoUrl = await uploadPhoto(photo);
-  }
 
   await getDb()
     .collection(COLLECTION)
@@ -60,14 +40,14 @@ export async function updateItem(id: string, formData: FormData): Promise<void> 
   const name = (formData.get("name") as string)?.trim();
   const categoryId = formData.get("categoryId") as string;
   const brand = ((formData.get("brand") as string) ?? "").trim();
-  const photo = formData.get("photo") as File | null;
+  const photoUrl = (formData.get("photoUrl") as string)?.trim();
 
   if (!name) throw new Error("Name is required");
   if (!categoryId) throw new Error("Category is required");
 
   const update: Record<string, unknown> = { name, categoryId, brand };
-  if (photo && photo.size > 0) {
-    update.photoUrl = await uploadPhoto(photo);
+  if (photoUrl) {
+    update.photoUrl = photoUrl;
   }
 
   await getDb().collection(COLLECTION).doc(id).update(update);

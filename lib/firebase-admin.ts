@@ -1,6 +1,5 @@
 import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { getStorage } from "firebase-admin/storage";
 import path from "node:path";
 import fs from "node:fs";
 
@@ -21,7 +20,6 @@ function createApp(): App {
   const serviceAccount = loadServiceAccount();
   return initializeApp({
     credential: cert(serviceAccount),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
   });
 }
 
@@ -32,8 +30,4 @@ function getFirebaseApp(): App {
 
 export function getDb() {
   return getFirestore(getFirebaseApp());
-}
-
-export function getBucket() {
-  return getStorage(getFirebaseApp()).bucket();
 }
