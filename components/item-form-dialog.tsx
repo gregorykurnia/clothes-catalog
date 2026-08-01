@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +39,8 @@ export function ItemFormDialog({
   const [categoryId, setCategoryId] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -97,13 +99,40 @@ export function ItemFormDialog({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="photo">Photo</Label>
-              <Input
-                id="photo"
+              <input
+                ref={cameraInputRef}
                 type="file"
                 accept="image/*"
                 capture="environment"
+                className="hidden"
                 onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
               />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  Take photo
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Choose file
+                </Button>
+              </div>
+              {photo && (
+                <p className="text-xs text-muted-foreground">{photo.name}</p>
+              )}
               {item?.photoUrl && !photo && (
                 <p className="text-xs text-muted-foreground">
                   Leave empty to keep the current photo.
