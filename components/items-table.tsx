@@ -232,17 +232,27 @@ export function ItemsTable({
 }
 
 function StatusCell({ item }: { item: Item }) {
+  const [status, setStatus] = useState(item.status);
+  const [syncedStatus, setSyncedStatus] = useState(item.status);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
 
-  async function handleChange(value: string | null) {
-    const status = value as ItemStatus;
-    if (!status || status === item.status) return;
+  if (item.status !== syncedStatus) {
+    setSyncedStatus(item.status);
+    setStatus(item.status);
+  }
+
+  async function handleChange(value: string) {
+    const next = value as ItemStatus;
+    if (next === status) return;
+    const previous = status;
+    setStatus(next);
     setBusy(true);
     try {
-      await updateItemStatus(item.id, status);
+      await updateItemStatus(item.id, next);
       router.refresh();
     } catch {
+      setStatus(previous);
       toast.error("Failed to update status");
     } finally {
       setBusy(false);
@@ -251,11 +261,11 @@ function StatusCell({ item }: { item: Item }) {
 
   return (
     <select
-      value={item.status}
+      value={status}
       disabled={busy}
       onChange={(e) => handleChange(e.target.value)}
       className={`h-7 rounded-md border-none px-2 text-xs font-medium ${
-        item.status === "washed"
+        status === "washed"
           ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
           : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
       }`}
@@ -267,18 +277,27 @@ function StatusCell({ item }: { item: Item }) {
 }
 
 function GoingOutCell({ item }: { item: Item }) {
+  const [goingOut, setGoingOut] = useState(item.goingOut);
+  const [syncedGoingOut, setSyncedGoingOut] = useState(item.goingOut);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
 
-  async function handleChange(value: string | null) {
-    if (!value) return;
-    const goingOut = value === "yes";
-    if (goingOut === item.goingOut) return;
+  if (item.goingOut !== syncedGoingOut) {
+    setSyncedGoingOut(item.goingOut);
+    setGoingOut(item.goingOut);
+  }
+
+  async function handleChange(value: string) {
+    const next = value === "yes";
+    if (next === goingOut) return;
+    const previous = goingOut;
+    setGoingOut(next);
     setBusy(true);
     try {
-      await updateItemGoingOut(item.id, goingOut);
+      await updateItemGoingOut(item.id, next);
       router.refresh();
     } catch {
+      setGoingOut(previous);
       toast.error("Failed to update going out status");
     } finally {
       setBusy(false);
@@ -287,11 +306,11 @@ function GoingOutCell({ item }: { item: Item }) {
 
   return (
     <select
-      value={item.goingOut ? "yes" : "no"}
+      value={goingOut ? "yes" : "no"}
       disabled={busy}
       onChange={(e) => handleChange(e.target.value)}
       className={`h-7 rounded-md border-none px-2 text-xs font-medium ${
-        item.goingOut
+        goingOut
           ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
           : "bg-muted text-muted-foreground"
       }`}
